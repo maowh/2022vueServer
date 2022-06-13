@@ -1,19 +1,14 @@
-const { CODE_ERROR, CODE_SUCCESS, CODE_TOKEN_EXPIRED } = require('../untils/constant')
+const {
+  CODE_ERROR,
+  CODE_SUCCESS
+} = require('../utils/constant')
 
 class Result {
   constructor(data, msg = '操作成功', options) {
-    this.data = null
-    // 根据传的参数来获取
-    if (arguments.length === 0) {
-      this.msg = '操作成功'
-    } else if (arguments.length === 1) {
-      this.msg = data
-    } else {
-      this.data = data
-      this.msg = msg
-      if (options) {
-        this.options = options
-      }
+    this.data = data
+    this.msg = msg
+    if (options) {
+      this.options = options
     }
   }
 
@@ -23,15 +18,12 @@ class Result {
     }
     let base = {
       code: this.code,
-      msg: this.msg,
-    }
-    if (this.data) {
-      base.data = this.data
+      data: this.data,
+      msg: this.msg
     }
     if (this.options) {
       base = { ...base, ...this.options }
     }
-    console.log(base)
     return base
   }
 
@@ -46,11 +38,6 @@ class Result {
 
   fail(res) {
     this.code = CODE_ERROR
-    this.json(res)
-  }
-
-  jwtError(res) {
-    this.code = CODE_TOKEN_EXPIRED
     this.json(res)
   }
 }

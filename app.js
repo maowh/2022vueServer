@@ -1,17 +1,42 @@
 const express = require('express')
-const router = require('./router/index')
+const logger = require('morgan')
+const router = require('./router/index.js')
+const bodyParser = require('body-parser')
 const cors = require('cors')
-// 创建 express 应用
+const https = require('https')
+const fs = require('fs')
+const init = require('./utils/init')
+
+init()
 const app = express()
 
 app.use(cors())
-app.use(express.urlencoded({ extended: true }))
-app.use(express.json())
+app.use(logger('dev'))
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json())
 
-app.use(router)
+app.use('/', router)
 
-// 使 express 监听 5000 端口号发起的 http 请求
-const server = app.listen(5000, function () {
-  const { address, port } = server.address()
-  console.log('Http Server is running on http://%s:%s', address, port)
+const server = app.listen(5002, function() {
+  const host = server.address().address
+  const port = server.address().port
+
+  console.log('HTTP Server is running on http://%s:%s', host, port)
+})
+// const privateKey = fs.readFileSync('./https/5530542_www.liumeng.xin.key', 'utf8')
+// const certificate = fs.readFileSync('./https/5530542_www.liumeng.xin.pem', 'utf8')
+// const credentials = { key: privateKey, cert: certificate }
+// const httpsServer = https.createServer(credentials, app)
+// const SSLPORT = 18082
+// httpsServer.listen(SSLPORT, function() {
+//   console.log('HTTPS Server is running on: https://localhost:%s', SSLPORT)
+// })
+
+process.on('uncaughtException', function(err) {
+  console.log('uncaughtException', err)
+})
+
+const unhandledRejections = new Map();
+process.on('unhandledRejection', (reason, promise) => {
+  unhandledRejections.set(promise, reason);
 })

@@ -1,20 +1,28 @@
+const {
+  CODE_ERROR,
+  CODE_TOKEN_EXPIRED
+} = require('../utils/constant')
+
 const express = require('express')
 const boom = require('boom')
-const userRouter = require('./user')
-const fileRouter = require('./file')
-// const { CODE_ERROR } = require('../untils/constant')
 const jwtAuth = require('./jwt')
-const Result = require('../models/Result')
+const userRouter = require('./user')
+const bookRouter = require('./book')
+const roleRouter = require('./role')
 
 // 注册路由
 const router = express.Router()
+
+// 对后续请求进行身份验证
 router.use(jwtAuth)
 
-router.get('/', function (req, res) {
+router.get('/', function(req, res) {
   res.send('欢迎学习小慕读书管理后台')
 })
+
 router.use('/user', userRouter)
-router.use('/file', fileRouter)
+router.use('/book', bookRouter)
+router.use('/role', roleRouter)
 
 /**
  * 集中处理404请求的中间件
@@ -24,6 +32,7 @@ router.use('/file', fileRouter)
 router.use((req, res, next) => {
   next(boom.notFound('接口不存在'))
 })
+
 /**
  * 自定义路由异常处理中间件
  * 注意两点：
@@ -31,22 +40,24 @@ router.use((req, res, next) => {
  * 第二，方法的必须放在路由最后
  */
 router.use((err, req, res, next) => {
-  if (err.name && err.name === 'UnauthorizedError') {
-    const { status = 401, message } = err
-    new Result(null, 'token验证失败', { error: status, errMsg: message }).jwtError(
-      res.status(status)
-    )
+  if (err.name === 'UnauthorizedError') {
+    console.log(err)
+    res.json({
+      code: CODE_TOKEN_EXPIRED,
+      msg: 'token失效',
+      error: err.status,
+      errorMsg: err.name
+    })
   } else {
     const msg = (err && err.message) || '系统错误'
-    const statusCode = (err.output && err.output.statusCode) || 500
+    const statusCode = (err.output && err.output.statusCode) || 500;
     const errorMsg = (err.output && err.output.payload && err.output.payload.error) || err.message
-    new Result(null, msg, { error: statusCode, errorMsg }).fail(res.status(statusCode))
-    // res.status(statusCode).json({
-    //   code: CODE_ERROR,
-    //   msg,
-    //   error: statusCode,
-    //   errorMsg,
-    // })
+    res.status(statusCode).json({
+      code: CODE_ERROR,
+      msg,
+      error: statusCode,
+      errorMsg
+    })
   }
 })
 
